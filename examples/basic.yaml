@@ -1,5 +1,8 @@
+# Measures distance with the Soldered Ultrasonic Sensor with Qwiic every second and publishes it in meters.
+# The sensor reports "unknown" (NaN) when no echo comes back, i.e. nothing within ~2 cm - 4 m in front of it.
+
 esphome:
-  name: soldered-esphome-component-template-test
+  name: soldered-ultrasonic-basic
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -8,11 +11,21 @@ esp32:
 
 logger:
   level: DEBUG
+  hardware_uart: UART0
 
 external_components:
   - source:
       type: local
       path: ../components
-    components: [soldered_esphome_component_template]
+    components: [soldered_ultrasonic]
 
-soldered_esphome_component_template:
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  scan: true
+
+sensor:
+  - platform: soldered_ultrasonic
+    name: "Distance"
+    address: 0x30
+    update_interval: 1s

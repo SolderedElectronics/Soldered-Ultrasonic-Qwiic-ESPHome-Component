@@ -1,31 +1,21 @@
-# Soldered NAZIV PROIZVODA ESPHome Component
+# Soldered Ultrasonic Sensor With Qwiic ESPHome Component
 
-| ![Product name](https://upload.wikimedia.org/wikipedia/commons/8/8f/Example_image.svg) |
-| :------------------------------------------------------------------------------------: |
-|                      [NAZIV PROIZVODA](https://www.solde.red/SKU)                      |
+| ![Ultrasonic Sensor With Qwiic](https://cms.soldered.com/products/333001/media/333001_featured-photo_cb09ce.jpg) |
+| :-------------------------------------------------------------------------------------------------------------: |
+|                           [Ultrasonic Sensor With Qwiic](https://www.solde.red/333001)                           |
 
-OPIS PROIZVODA + LINK NA [Qwiic ecosystem](https://soldered.com/collections/qwiic-ecosystem).
+Measures distances from 2 cm to 400 cm using the HC-SR04 ultrasonic sensor. An onboard ATtiny404 runs the
+trigger/echo measurement and reports the result over I2C, so no extra GPIO pins are needed. The board is part of the
+[Qwiic ecosystem](https://soldered.com/collections/qwiic-ecosystem).
 
-External ESPHome component for NAZIV PROIZVODA.
+External ESPHome component for the Soldered Ultrasonic Sensor with Qwiic. It is a port of the
+[Soldered Ultrasonic Sensor easyC Arduino library](https://github.com/SolderedElectronics/Soldered-Ultrasonic-Sensor-easyC-Arduino-Library)
+and publishes the distance as an ESPHome [sensor](https://esphome.io/components/sensor/) in meters, the same way the
+built-in [`ultrasonic`](https://esphome.io/components/sensor/ultrasonic/) component does for a plain HC-SR04 wired to
+trigger/echo GPIOs.
 
-### Using the template
-
-Before publishing a new component make sure to replace:
-
-- `NAZIV PROIZVODA`, `OPIS PROIZVODA`, product image, and SKU link in this README
-- the `components/soldered_esphome_component_template/` directory name with the real component name
-- `soldered_esphome_component_template` namespace, `SolderedEsphomeComponentTemplate` class name, and `CODEOWNERS` in `__init__.py`, matching names in the `.h`/`.cpp` files and their `#include`
-- `CONFIG_SCHEMA` and `to_code()` in `__init__.py` with the real config options and codegen
-- the `TAG` string and `dump_config()` output in the `.cpp` file
-- `github://SolderedElectronics/<repo>` source path and the sample config in the "Usage" section below
-- `examples/basic.yaml` (rename/add examples as needed, keep `external_components.source.path` pointing at `../components`)
-- `@file`, `@brief`, `@author` Doxygen comments in the `.h`/`.cpp` files to describe the real API
-
-Also make sure to add more examples if the component supports multiple boards/modes (see `Soldered-Inkplate-ESPHome` for a repo with several board variants).
-
-Run `pip install clang-format==13.0.1 && find components -name "*.cpp" -o -name "*.h" | xargs clang-format -i` before committing to auto-format the component against ESPHome's own style (`.clang-format`, copied from the ESPHome core repo). CI runs the same check on every push/PR via `.github/workflows/format_check.yml` and fails on unformatted code. `.github/workflows/build.yml` compiles every YAML under `examples/` on every push/PR.
-
-**Remove this section of README after everything is done!**
+> For a plain [HC-SR04 module](https://www.solde.red/555041) without Qwiic (trigger/echo pins), use ESPHome's
+> built-in `ultrasonic` component instead.
 
 ## Repository Contents
 
@@ -38,17 +28,41 @@ Reference this repo directly from your own ESPHome YAML (no need to clone it loc
 
 ```yaml
 external_components:
-  - source: github://SolderedElectronics/<repo>
-    components: [soldered_esphome_component_template]
+  - source: github://SolderedElectronics/Soldered-Ultrasonic-Qwiic-ESPHome-Component
+    components: [soldered_ultrasonic]
 
-soldered_esphome_component_template:
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+sensor:
+  - platform: soldered_ultrasonic
+    name: "Distance"
+    update_interval: 1s
 ```
+
+On every update the component starts a measurement, waits 50 ms for the board to finish it (without blocking the
+ESPHome main loop), then reads the echo time and converts it to a distance using a speed of sound of 343 m/s. When
+nothing is in range the board reports no echo and the sensor publishes `NaN` (shown as "unknown" in Home Assistant).
 
 See [`examples/basic.yaml`](examples/basic.yaml) for a full working example.
 
+### Configuration variables
+
+- **address** (*Optional*, int): I2C address of the board. Defaults to `0x30`; can be set to `0x30` - `0x37` with the
+  board's three address-select pads (each one closed adds 1, 2 or 4).
+- **update_interval** (*Optional*, [Time](https://esphome.io/guides/configuration-types#config-time)): how often to
+  measure. Defaults to `60s`. Must be longer than 50 ms, the time one measurement takes.
+- **i2c_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types#config-id)): I2C bus to use, if there is
+  more than one.
+- All other options from [Sensor](https://esphome.io/components/sensor/#config-sensor) (`name`, `filters`,
+  `unit_of_measurement`, ...). To get centimeters, use a `multiply: 100` filter and set `unit_of_measurement: cm`.
+
 ### Hardware design
 
-You can find hardware design for this board in the _NAZIV PROIZVODA_ hardware repository.
+You can find hardware design for this board in the
+[_Ultrasonic sensor qwiic_](https://github.com/SolderedElectronics/Ultrasonic-sensor-qwiic-hardware-design) hardware
+repository.
 
 ### Documentation
 
